@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Spyder Editor
-This is a temporary script file.
-"""
 
 import openface
 import numpy as np
@@ -34,7 +30,7 @@ bbList=[[]] * maxIndex
 facePredictor=FacePrediction()
 
 def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=0.5):
-    if (len(currentBBox)==0):
+    if (len(currentBBox)<1):
         return False,[]
     newPeople=[]
     i=0
@@ -52,8 +48,7 @@ def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=0.5):
         if (found==False):
             if (u.confidence<minConfidenceAccepted):
                 print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))
-                u.faceID=0
-                newPeople.append(u)
+                newPeople.append(PredictionResult(0,u.vectorFace,u.vectorFace))
                 
         i=i+1
     return len(newPeople)>0 , newPeople
@@ -64,7 +59,6 @@ def checkPeopleLeft(previousBB,currentBBox,minConfidenceAccepted=0.5):
 faceMan=FacesManager()
 db=dbManager()
 minComaprision=1
-facePredictor=FacePrediction()
 while(True):
     # Capture frame-by-frame
     currentIndex=(currentIndex+1) % maxIndex
@@ -91,7 +85,7 @@ while(True):
     if (checkNewPeople(bbList[distantIndex],currentBBox)[0]==True):
             print("No. people appeared in camera changed to: "+str(nPeople))
             if (nPeople==0):
-                continue
+                continue 
             now=str(datetime.now())
             now=now.replace("-",'').replace(":",'').replace(".",'').replace(" ",'')
             imgFile=savingImgFolder+now+".png"
@@ -100,6 +94,8 @@ while(True):
             for faceRes in currentBBox:
                 faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID);
             db.commit()
+            for fRes in currentBBox:
+                print ("(id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
 
 # When everything done, release the capture
 cap.release()   
