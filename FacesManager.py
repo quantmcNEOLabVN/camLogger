@@ -73,6 +73,6 @@ class FacesManager:
         vectorF="null";
         if (not (vectFace is None)):
              vectorF=str(vectFace.tolist())
-        query=''' INSERT INTO EMP_IMG VALUES ( (SELECT COUNT(*)+1 FROM EMP_IMG) , %s, '%s' , '%s') ''' %(str(pID),imgID,vectF) )
+        query=''' INSERT INTO EMP_IMG VALUES ( (SELECT COUNT(*)+1 FROM EMP_IMG) , %s, '%s' , '%s') ''' %(str(pID),imgID,vectorF)
         self.db.execQuery(query)
         return True

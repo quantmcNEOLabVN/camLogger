@@ -27,9 +27,6 @@ def quit():
     cap.release()
     cv2.destroyAllWindows()
 
-
-
-
 maxIndex=24
 currentIndex=-1
 bbList=[[]] * maxIndex
@@ -74,7 +71,7 @@ while(True):
     bboxes = align.getAllFaceBoundingBoxes(frame)
     nPeople=len(bboxes)
     currentBBox=[]
-    for bb in bboxes:
+    for bb in bboxes:x
         alignedFace = align.align(imgDim, frame,  bb,
                 landmarkIndices=openface.AlignDlib.OUTER_EYES_AND_NOSE)
         rep2 = net.forward(alignedFace)
