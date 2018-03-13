@@ -10,6 +10,7 @@ import cv2
 from dbManager import *
 from FacesManager  import *
 from datetime import datetime
+from FacePrediction import *
 UPLOAD_FOLDER = '/tmp/'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 multiple = True
@@ -30,34 +31,40 @@ def quit():
 maxIndex=24
 currentIndex=-1
 bbList=[[]] * maxIndex
+facePredictor=FacePrediction()
 
-
-def checkNewPeople(previousBB,currentBBox,minDAccepted=0.5):
+def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=0.5):
+    if (len(currentBBox)==0):
+        return False,[]
     newPeople=[]
-    for u in currentBBox:
-        minD=99999999
-        for v in previousBB:
-            D=u-v
-            minD=min(np.dot(D,D),minD)
-        if (minD>minDAccepted):
-            newPeople.append(u);
+    i=0
+    j=0
+    while (i<len(currentBBox)):
+        u=currentBBox[i]
+        found=False
+        while (j<len(previousBB)):
+            v=previousBB[j]
+            if (u.faceID>=v.faceID):
+                if (u.faceID==v.faceID):
+                    found=True
+                break
+            j=j+1
+        if (found==False):
+            if (u.confidence<minConfidenceAccepted):
+                print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))
+                u.faceID=0
+                newPeople.append(u)
+                
+        i=i+1
     return len(newPeople)>0 , newPeople
 
-def checkPeopleLeft(previousBB,currentBBox,minDAccepted=0.5):
-    leftPeople=[]
-    for u in previousBB:
-        minD=99999999
-        for v in currentBBox:
-            D=u-v
-            minD=min(np.dot(D,D),minD)
-        if (minD>minDAccepted):
-            leftPeople.append(u)
-    return len(leftPeople)>0 , leftPeople
+def checkPeopleLeft(previousBB,currentBBox,minConfidenceAccepted=0.5):    
+    return checkNewPeople(currentBBox,previousBB,minConfidenceAccepted)
 
 faceMan=FacesManager()
 db=dbManager()
-minComaprision=5
-
+minComaprision=1
+facePredictor=FacePrediction()
 while(True):
     # Capture frame-by-frame
     currentIndex=(currentIndex+1) % maxIndex
@@ -71,24 +78,17 @@ while(True):
     bboxes = align.getAllFaceBoundingBoxes(frame)
     nPeople=len(bboxes)
     currentBBox=[]
-    for bb in bboxes:x
+    for bb in bboxes:
         alignedFace = align.align(imgDim, frame,  bb,
                 landmarkIndices=openface.AlignDlib.OUTER_EYES_AND_NOSE)
         rep2 = net.forward(alignedFace)
         currentBBox.append(rep2)
+    currentBBox=facePredictor.predict(currentBBox)
+    
+    
     bbList[currentIndex]=currentBBox
     distantIndex=(currentIndex-minComaprision-1+maxIndex) % maxIndex
     if (checkNewPeople(bbList[distantIndex],currentBBox)[0]==True):
-        checkContinuous=True
-        for i in range(1,minComaprision+1):
-            idz=(currentIndex - i + maxIndex) % maxIndex
-            if ((checkNewPeople(bbList[idz],currentBBox)[0]==True)):
-                checkContinuous=False
-                break
-            if ((checkNewPeople(bbList[idz],bbList[distantIndex])[0]==False)):
-                checkContinuous=False
-                break
-        if (checkContinuous == True):
             print("No. people appeared in camera changed to: "+str(nPeople))
             if (nPeople==0):
                 continue
@@ -97,8 +97,8 @@ while(True):
             imgFile=savingImgFolder+now+".png"
             db.execQuery('''  INSERT INTO IMAGES VALUES ('%s', '%s',to_timestamp('%s' , 'YYYYMMDDHH24MISSFF')) ''' %(now,imgFile,now))
             cv2.imwrite(imgFile , frame)
-            for vecFace in currentBBox:
-                faceMan.addNewFace(vecFace,now);
+            for faceRes in currentBBox:
+                faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID);
             db.commit()
 
 # When everything done, release the capture

@@ -45,31 +45,12 @@ class FacesManager:
         self.faceSet=[]
         self.loadFacefromDB()
 
-    def findFaceID(self, vectFace,minDAccepted=0.5):
-        retID=None
-        minD=1000.0
-        for face in self.faceSet:
-            vf=face.VectorFace
-            d = vf - vectFace
-            dist=np.dot(d,d)
-            if (minD>dist):
-                minD=dist
-                retID=face.ID
-        print minD
-        if (minD>minDAccepted):
-            return None
+
+    def addNewFace(self, vectFace,imgID,pID=None):
+        if ((pID is None)or  (pID<1)):
+            pID="null"
         else:
-            return retID
-    def addNewFace(self, vectFace,imgID):
-        pID=self.findFaceID(vectFace)
-    
-        if (pID is None):
-            pID=self.db.execQuery('''SELECT NVL(MAX(Person_ID),0) FROM PEOPLE''')[0][0]+1
-            face=self.Face(self.db,pID,vectFace)
-            face.saveToDB()
-            self.faceSet.append(face)
-            print ("New person detected! new ID=%s" %str([pID]))
-            
+            piD=str(pID)
         vectorF="null";
         if (not (vectFace is None)):
              vectorF=str(vectFace.tolist())

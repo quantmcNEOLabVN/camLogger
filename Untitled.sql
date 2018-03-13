@@ -4,6 +4,9 @@ FROM PEOPLE p JOIN EMP_IMG ei ON (p.Person_ID = ei.Person_ID)
     join IMAGES img on (img.Img_ID=ei.Img_ID);
 Select * from IMAGES;
 Select * from PEOPLE;
-select * from EMP_IMG order by IMG_ID ;
 
-SELECT (COUNT(*)+1) FROM EMP_IMG;
+SELECT * FROM EMP_IMG;
+SELECT 
+    * 
+FROM EMP_IMG
+WHERE PERSON_ID is not null;
