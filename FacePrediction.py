@@ -55,11 +55,13 @@ class FacePrediction:
         X=np.array(self.dataX)
         Y=np.array(self.dataY)
         self.model.fit(X,Y)
+        print ("Model constructed!")
     def saveModel(self,fileName="classifier.sav"):
         joblib.dump(self.model, fileName)
-        print("File loaded")
+        print("Model saved")
     def loadModel(self,fileName="classifier.sav"):
-        joblib.load(self.model, fileName)
+        self.model=joblib.load(fileName)
+        print ("model loaded")
     
 
     def predict(self,X):

@@ -58,7 +58,7 @@ def checkPeopleLeft(previousBB,currentBBox,minConfidenceAccepted=0.5):
 
 faceMan=FacesManager()
 db=dbManager()
-minComaprision=1
+minComaprision=5
 while(True):
     # Capture frame-by-frame
     currentIndex=(currentIndex+1) % maxIndex
