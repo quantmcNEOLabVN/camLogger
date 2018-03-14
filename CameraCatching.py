@@ -82,12 +82,13 @@ while(True):
         for i in range(1,minComaprision+1):
             if (checkChangeBB(bbList[(distantIndex+i)%maxIndex],currentBBox,printLowConfidence=True)==True):
                 checkContinuous=False
-                print ("Face changing rejected! Because of not continuous enough")
+                print ("Face changing rejected! Not continuous enough!")
                 break
 
         if (checkContinuous==True):
             print ("Face changing accepted!")
             if (nPeople==0):
+                print ("No face detected!")
                 continue 
             now=str(datetime.now())
             now=now.replace("-",'').replace(":",'').replace(".",'').replace(" ",'')
