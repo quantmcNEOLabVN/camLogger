@@ -29,7 +29,8 @@ currentIndex=-1
 bbList=[[]] * maxIndex
 facePredictor=FacePrediction()
 
-def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=0.5):
+minConfidenceAccepted=0.5
+def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=minConfidenceAccepted,printLowConfidence=False):
     if (len(currentBBox)<1):
         return False,[]
     newPeople=[]
@@ -47,7 +48,8 @@ def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=0.5):
             j=j+1
         if (found==False):
             if (u.confidence<minConfidenceAccepted):
-                print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))
+                if (printLowConfidence==True):
+                    print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))
                 newPeople.append(PredictionResult(0,u.vectorFace,u.vectorFace))
                 
         i=i+1
@@ -85,8 +87,8 @@ while(True):
     if (checkNewPeople(bbList[distantIndex],currentBBox)[0]==True):
         print ("Face changing detected!")
         checkContinuous=True
-        for i in range(1,minComaprision):
-            if (checkNewPeople(bbList[(distantIndex+i)%maxIndex],currentBBox)[0]==True):
+        for i in range(1,minComaprision+1):
+            if (checkNewPeople(bbList[(distantIndex+i)%maxIndex],currentBBox,printLowConfidence=True)[0]==True):
                 checkContinuous=False
                 print ("Face changing rejected! Because of not continuous enough")
                 break
@@ -101,7 +103,10 @@ while(True):
             db.execQuery('''  INSERT INTO IMAGES VALUES ('%s', '%s',to_timestamp('%s' , 'YYYYMMDDHH24MISSFF')) ''' %(now,imgFile,now))
             cv2.imwrite(imgFile , frame)
             for faceRes in currentBBox:
-                faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID);
+                fID=faceRes.faceID
+                if (faceRes.confidence<minConfidenceAccepted):
+                    fID=None
+                faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID)
             db.commit()
     for fRes in currentBBox:
         print ("(id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
