@@ -30,37 +30,28 @@ bbList=[[]] * maxIndex
 facePredictor=FacePrediction()
 
 minConfidenceAccepted=0.5
-def checkNewPeople(previousBB,currentBBox,minConfidenceAccepted=minConfidenceAccepted,printLowConfidence=False):
-    if (len(currentBBox)<1):
-        return False,[]
+def checkChangeBB(previousBB,currentBBox,minConfidenceAccepted=minConfidenceAccepted,printLowConfidence=False):
+    if (len(previousBB)!=len(currentBBox)):
+        return True
+    if (len(currentBBox)==0):
+        return False
     newPeople=[]
     i=0
-    j=0
     while (i<len(currentBBox)):
         u=currentBBox[i]
-        found=False
-        while (j<len(previousBB)):
-            v=previousBB[j]
-            if (u.faceID>=v.faceID):
-                if (u.faceID==v.faceID):
-                    found=True
-                break
-            j=j+1
-        if (found==False):
-            if (u.confidence<minConfidenceAccepted):
-                if (printLowConfidence==True):
-                    print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))
-                newPeople.append(PredictionResult(0,u.vectorFace,u.vectorFace))
-                
+        v=previousBB[i]
+        if (u.faceID!=v.faceID):
+            return True
+        if (u.confidence<minConfidenceAccepted):
+            if (printLowConfidence==True):
+                print ("Low confidence detected, %s  ! Closest person ID is %s" %(str(u.confidence), str(u.faceID)))        
         i=i+1
-    return len(newPeople)>0 , newPeople
-
-def checkPeopleLeft(previousBB,currentBBox,minConfidenceAccepted=0.5):    
-    return checkNewPeople(currentBBox,previousBB,minConfidenceAccepted)
+    return False
 
 faceMan=FacesManager()
 db=dbManager()
 minComaprision=5
+
 while(True):
     # Capture frame-by-frame
     currentIndex=(currentIndex+1) % maxIndex
@@ -82,13 +73,14 @@ while(True):
     currentBBox=facePredictor.predict(currentBBox)
     
 
+    addToDB=False
     bbList[currentIndex]=currentBBox
     distantIndex=(currentIndex-minComaprision-1+maxIndex) % maxIndex
-    if (checkNewPeople(bbList[distantIndex],currentBBox)[0]==True):
+    if (checkChangeBB(bbList[distantIndex],currentBBox)==True):
         print ("Face changing detected!")
         checkContinuous=True
         for i in range(1,minComaprision+1):
-            if (checkNewPeople(bbList[(distantIndex+i)%maxIndex],currentBBox,printLowConfidence=True)[0]==True):
+            if (checkChangeBB(bbList[(distantIndex+i)%maxIndex],currentBBox,printLowConfidence=True)==True):
                 checkContinuous=False
                 print ("Face changing rejected! Because of not continuous enough")
                 break
@@ -108,8 +100,16 @@ while(True):
                     fID=None
                 faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID)
             db.commit()
-    for fRes in currentBBox:
-        print ("(id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
+            addToDB=True
+    if (addToDB==True):
+        print("Added to database: ")
+        for fRes in currentBBox:
+            print ("  +    (id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
+        print("------ END LIST ------")
+    else:
+        for fRes in currentBBox:
+           print ("  -    (id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
+
 
 # When everything done, release the capture
 cap.release()   
