@@ -79,11 +79,20 @@ while(True):
         currentBBox.append(rep2)
     currentBBox=facePredictor.predict(currentBBox)
     
-    
+
     bbList[currentIndex]=currentBBox
     distantIndex=(currentIndex-minComaprision-1+maxIndex) % maxIndex
     if (checkNewPeople(bbList[distantIndex],currentBBox)[0]==True):
-            print("No. people appeared in camera changed to: "+str(nPeople))
+        print ("Face changing detected!")
+        checkContinuous=True
+        for i in range(1,minComaprision):
+            if (checkNewPeople(bbList[(distantIndex+i)%maxIndex],currentBBox)[0]==True):
+                checkContinuous=False
+                print ("Face changing rejected! Because of not continuous enough")
+                break
+
+        if (checkContinuous==True):
+            print ("Face changing accepted!")
             if (nPeople==0):
                 continue 
             now=str(datetime.now())
@@ -94,8 +103,8 @@ while(True):
             for faceRes in currentBBox:
                 faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID);
             db.commit()
-            for fRes in currentBBox:
-                print ("(id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
+    for fRes in currentBBox:
+        print ("(id=%s , confidence=%s)" % (str(fRes.faceID), str(fRes.confidence)))
 
 # When everything done, release the capture
 cap.release()   
