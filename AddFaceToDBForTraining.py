@@ -31,14 +31,17 @@ def quit():
     cap.release()
     cv2.destroyAllWindows()
     
-
 db=dbManager()
-totalPeople=db.execQuery('SELECT COUNT(*) FROM PEOPLE')[0][0]
-print ("As now, in DB we'have %s people" %str(totalPeople))
-for record in db.execQuery('''SELECT pp.PERSON_ID, count(*) FROM PEOPLE pp JOIN  EMP_IMG ei ON (pp.Person_ID=ei.Person_ID) GROUP BY pp.PERSON_ID'''):
-    print (''' id=%s: %s samples.''' %(str(record[0]), str(record[1])))
+totalPeople=0
 
+def showDBStatistic():
+    global totalPeople
+    totalPeople=db.execQuery('SELECT COUNT(*) FROM PEOPLE')[0][0]
+    print ("As now, in DB we'have %s people" %str(totalPeople))
+    for record in db.execQuery('''SELECT pp.PERSON_ID, count(*) FROM PEOPLE pp JOIN  EMP_IMG ei ON (pp.Person_ID=ei.Person_ID) GROUP BY pp.PERSON_ID'''):
+        print (''' id=%s: %s samples.''' %(str(record[0]), str(record[1])))
 
+showDBStatistic()
 print("Enter an ID in range 1..%s,   %s means add samples with a new person." %(str(totalPeople+1),str(totalPeople+1)))
 selectedID=eval(raw_input('Selected ID = '))
 
@@ -96,6 +99,7 @@ while (True):
         cv2.imwrite(imgFile , frame)
         query=''' INSERT INTO EMP_IMG VALUES ( (SELECT COUNT(*)+1 FROM EMP_IMG) , %s, '%s' , '%s') ''' %(str(selectedID),now,str(vectFace.tolist()))
         db.execQuery(query)
+        vectList.append(vectFace)
         db.commit()
         print ('   Added a new sample for id= %s' %str(selectedID))
 
@@ -110,9 +114,18 @@ predictor.doTrain()
 predictor.saveModel()
 print ('Done!\nTesting model with new samples: ')
 pred=predictor.predict(vectList)
+nCorrect=0
+totalConf=0.0
+minConf=1.0
 for result in pred:
     verdict='Wrong ID'
     if (result.faceID==selectedID):
         verdict='Correct ID, with confidence = '+str(result.confidence)
+        nCorrect=nCorrect+1
+        totalConf=totalConf+result.confidence
+        minConf=min(minConf,result.confidence)
     print(verdict)
-    
+print("Total: %s samples for ID=%s" %(str(len(vectList)), str(selectedID)))
+print("Corrected: %s samples for ID=%s" %(str(len(vectList)), str(selectedID)))
+print ("Average confidences for corrected samples: %s" %str(totalConf/nCorrect) )
+print ("Minimum confidence of all corrected samples: %s" %str( minConf ) )
