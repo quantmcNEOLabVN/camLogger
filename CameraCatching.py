@@ -71,7 +71,7 @@ while(True):
         rep2 = net.forward(alignedFace)
         currentBBox.append(rep2)
     currentBBox=facePredictor.predict(currentBBox)
-    
+    sorted(currentBBox, key=lambda face: face.faceID)    
 
     addToDB=False
     bbList[currentIndex]=currentBBox

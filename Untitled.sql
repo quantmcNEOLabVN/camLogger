@@ -12,3 +12,7 @@ SELECT
     * 
 FROM EMP_IMG
 WHERE PERSON_ID is not null;
+SELECT
+     pp.PERSON_ID, count(*)
+FROM PEOPLE pp JOIN  EMP_IMG ei ON (pp.Person_ID=ei.Person_ID)
+GROUP BY pp.PERSON_ID;

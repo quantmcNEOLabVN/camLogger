@@ -35,6 +35,10 @@ class FacePrediction:
             self.loadDataFromDB()
             self.doTrain()
             self.saveModel()
+    def clearDataAndModel(self):
+        self.model = SVC(kernel='linear',probability=True)
+        self.dataX=[]
+        self.dataY=[]
 
     def addSingleDataSample(self,singleX,singleY):
         self.dataX.append(np.array(singleX))
@@ -83,5 +87,5 @@ class FacePrediction:
                     face=i+1
             Y.append(PredictionResult(face,maxConFid,X[x]))
             x=x+1
-        sorted(Y, key=lambda face: face.faceID)  
+  
         return Y
