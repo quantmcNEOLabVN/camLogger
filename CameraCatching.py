@@ -29,7 +29,7 @@ currentIndex=-1
 bbList=[[]] * maxIndex
 facePredictor=FacePrediction()
 
-minConfidenceAccepted=0.5
+minConfidenceAccepted=0.7
 def checkChangeBB(previousBB,currentBBox,minConfidenceAccepted=minConfidenceAccepted,printLowConfidence=False):
     if (len(previousBB)!=len(currentBBox)):
         return True
@@ -68,8 +68,8 @@ while(True):
     for bb in bboxes:
         alignedFace = align.align(imgDim, frame,  bb,
                 landmarkIndices=openface.AlignDlib.OUTER_EYES_AND_NOSE)
-        rep2 = net.forward(alignedFace)
-        currentBBox.append(rep2)
+        rep = net.forward(alignedFace)
+        currentBBox.append(rep)
     currentBBox=facePredictor.predict(currentBBox)
     sorted(currentBBox, key=lambda face: face.faceID)    
 
@@ -99,7 +99,8 @@ while(True):
                 fID=faceRes.faceID
                 if (faceRes.confidence<minConfidenceAccepted):
                     fID=None
-                faceMan.addNewFace(faceRes.vectorFace,now,faceRes.faceID)
+                    faceRes.faceID=fID
+                faceMan.addNewFace(faceRes.vectorFace,now,fID)
             db.commit()
             addToDB=True
     if (addToDB==True):

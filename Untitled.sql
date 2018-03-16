@@ -7,11 +7,11 @@ order by
 Select * from IMAGES;
 Select * from PEOPLE;
 
-SELECT * FROM EMP_IMG;
+SELECT * FROM EMP_IMG order by IMG_ID desc;
 SELECT 
     * 
 FROM EMP_IMG
-WHERE PERSON_ID is not null;
+WHERE PERSON_ID is null;
 SELECT
      pp.PERSON_ID, count(*)
 FROM PEOPLE pp JOIN  EMP_IMG ei ON (pp.Person_ID=ei.Person_ID)
