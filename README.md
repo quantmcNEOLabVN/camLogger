@@ -9,7 +9,7 @@ Please set up those requirements before using:
 - Oracle database (clients and server)
 - openface and its requirements.
 - scikit-learn
-OS Linux/Ubuntu is preferred
+- OS Linux/Ubuntu is preferred
 
 
 
